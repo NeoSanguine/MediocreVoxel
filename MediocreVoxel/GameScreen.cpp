@@ -53,17 +53,29 @@ void GameScreen::destroy()
 
 void GameScreen::onEnter()
 {
+	// texture shaders
 	m_textureProgram.compileShaders("bin/shaders/textureShading.vert", "bin/shaders/textureShading.frag");
 	m_textureProgram.addAttribute("vertexPosition");
 	m_textureProgram.addAttribute("vertexColor");
 	m_textureProgram.addAttribute("vertexUV");
 	m_textureProgram.linkShaders();
 
-	
+	m_spriteProgram.compileShaders("bin/shaders/spriteShader.vert", "bin/shaders/spriteShader.frag");
+	m_spriteProgram.addAttribute("vertexPosition");
+	m_spriteProgram.addAttribute("vertexColor");
+	m_spriteProgram.addAttribute("vertexUV");
+	m_spriteProgram.linkShaders();
 
 	
-	//
-	
+	m_hudSpriteBatch.init(); // for rendering hud
+
+	//font
+	m_spriteFont = new MediocreEngine::SpriteFont("bin/fonts/font.ttf", 32);
+
+	// hud camera
+	m_hudCamera.init(m_window->getScreenWidth(), m_window->getScreenHeight());
+	m_hudCamera.setPosition(glm::vec2(m_window->getScreenWidth() / 2.0f, m_window->getScreenHeight() / 2.0f));
+
 
 	m_model = glm::mat4(1.0f);
 	m_view = glm::mat4(1.0f);
@@ -80,6 +92,31 @@ void GameScreen::onEnter()
 			{
 				m_blocks[x][y][z] = new Block();
 				m_blocks[x][y][z]->init(glm::vec3(x, y, z));
+
+				int r = 0, g = 0, b = 0;
+
+				if (x % 10 == 0) {
+					r = 255;
+				}
+				else {
+					r = 200;
+				}
+
+				if (y % 2 == 0) {
+					g = 255;
+				}
+				else {
+					g = 150;
+				}
+
+				if (z % 5 == 0) {
+					b = 255;
+				}
+				else {
+					b = 100;
+				}
+
+				m_blocks[x][y][z]->setColor(r, g, b,255);
 				// Render m_pBlocks[x][y][z]
 			}
 		}
@@ -162,15 +199,18 @@ void GameScreen::update(float deltaTime)
 		{
 			for (int z = 0; z < 16; z++)
 			{
-				m_blocks[x][y][z]->update();
+				m_blocks[x][y][z]->update(deltaTime);
 			}
 		}
 	}
 
+	m_hudCamera.update(deltaTime);
 }
 
 void GameScreen::draw()
 {
+	
+
 	//Enable depth test
 	glEnable(GL_DEPTH_TEST);
 
@@ -193,6 +233,8 @@ void GameScreen::draw()
 	//glm::mat4 projection;
 	//projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
+	m_textureProgram.bind();
+
 	int modelLocation = m_textureProgram.getUniformLocation("model");
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(m_model));
 
@@ -202,12 +244,18 @@ void GameScreen::draw()
 	int projectionLocation = m_textureProgram.getUniformLocation("projection");
 	glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(m_proj));
 
-	glUseProgram(m_textureProgram.getShaderProgram());
+	
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+
+	
 
 	if (isWireframe) {
 		//Turn on wireframe mode
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
+
+	//glColor3f(1.0f, 0.0f, 0.0f);
 
 	for (int x = 0; x < 16; x++)
 	{
@@ -225,6 +273,22 @@ void GameScreen::draw()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
+	
+
+	m_textureProgram.unBind();
+	glPopMatrix();
+	
+	glLoadIdentity();
+
+	m_spriteProgram.bind();
+
+	
+	glm::mat4  projectionMatrixHUD = m_hudCamera.getCameraMatrix();
+	GLint pUniformHUD = m_spriteProgram.getUniformLocation("P");
+	glUniformMatrix4fv(pUniformHUD, 1, GL_FALSE, glm::value_ptr(projectionMatrixHUD));
+	drawHud();
+	m_spriteProgram.unBind();
+	
 }
 
 void GameScreen::checkInput()
@@ -243,6 +307,14 @@ void GameScreen::checkInput()
 
 void GameScreen::drawHud()
 {
+	m_hudSpriteBatch.begin();
 
-	
+	// draw fps
+	std::string fps = "FPS: " + std::to_string(m_game->getFPS());
+
+	m_spriteFont->draw(m_hudSpriteBatch, fps.c_str(), glm::vec2(0, m_window->getScreenHeight() - 30),
+		glm::vec2(1.0), 0.0f, MediocreEngine::ColorRGBA8(255, 255, 0, 255));
+
+	m_hudSpriteBatch.end();
+	m_hudSpriteBatch.renderBatch();
 }

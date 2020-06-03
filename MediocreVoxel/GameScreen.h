@@ -8,6 +8,9 @@
 #include <gtc\matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include "Block.h"
+#include <MediocreEngine/SpriteBatch.h>
+#include <MediocreEngine/SpriteFont.h>
+#include <MediocreEngine/Camera2D.h>
 
 class GameScreen : public MediocreEngine::IScreen
 {
@@ -37,11 +40,16 @@ private:
 	void drawHud();
 
 	MediocreEngine::GLSLProgram m_textureProgram;
+	MediocreEngine::GLSLProgram m_spriteProgram;
 	MediocreEngine::Window * m_window;
 
 
 
 	Block* m_blocks[16][16][16];
+
+	MediocreEngine::SpriteBatch m_hudSpriteBatch;
+	MediocreEngine::SpriteFont* m_spriteFont;
+	MediocreEngine::Camera2D m_hudCamera;
 	
 	glm::mat4 m_proj;
 	glm::mat4 m_model;

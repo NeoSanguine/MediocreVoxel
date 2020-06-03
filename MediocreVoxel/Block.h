@@ -14,9 +14,13 @@ public:
 
 	void init(const glm::vec3& position);
 
-	void update();
+	void update(float deltaTime);
 
 	void render(MediocreEngine::GLSLProgram program, glm::mat4 model);
+
+	void setPosition(const glm::vec3& position);
+	void setColor(MediocreEngine::ColorRGBA8 color);
+	void setColor(int r, int g, int b, int a);
 
 private:
 	MediocreEngine::ColorRGBA8 m_color;
