@@ -5,6 +5,6 @@ usable with any library or framework.
 
 What it looks like so far...
 
-![IMG1](https://imgur.com/qIGUWpe)
+![IMG1](https://imgur.com/qIGUWpe.png)
 
-![IMG2](https://imgur.com/OIQesVh)
+![IMG2](https://imgur.com/OIQesVh.gif)
