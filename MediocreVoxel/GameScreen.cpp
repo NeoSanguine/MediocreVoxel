@@ -82,6 +82,7 @@ void GameScreen::onEnter()
 	m_proj = glm::mat4(1.0f);
 
 	isWireframe = false;
+	isLooking = false;
 
 
 	for (int x = 0; x < 16; x++)
@@ -134,10 +135,25 @@ void GameScreen::handleInput()
 {
 	auto input = MediocreEngine::InputManager::get();
 
+	if (input.isKeyDown(SDL_BUTTON_RIGHT)) {
+		isLooking = true;
+	}
+	else {
+		if (isLooking == true) {
+			isLooking = false;
+		}
+	}
+
 	if (input.isKeyDown(SDLK_w)) {
 
 		// move forward
-		m_view = glm::translate(m_view, glm::vec3(0.0f, -0.1f, 0.0f));
+		if (isLooking) {
+			m_view = glm::translate(m_view, glm::vec3(0.0f, 0.f, 0.1f));
+		}
+		else {
+			m_view = glm::translate(m_view, glm::vec3(0.0f, -0.1f, 0.0f));
+		}
+		
 	}
 
 	if (input.isKeyDown(SDLK_d)) {
@@ -153,17 +169,24 @@ void GameScreen::handleInput()
 
 	if (input.isKeyDown(SDLK_s)) {
 		// move right
-		m_view = glm::translate(m_view, glm::vec3(0.0f, 0.1f, 0.0f));
+		// move forward
+		if (isLooking) {
+			m_view = glm::translate(m_view, glm::vec3(0.0f, 0.f, -0.1f));
+		}
+		else {
+			m_view = glm::translate(m_view, glm::vec3(0.0f, 0.1f, 0.0f));
+		}
+		
 	}
 
 	if (input.isKeyDown(SDLK_q)) {
 		// move right
-		m_model = glm::rotate(m_model, glm::radians(-1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		m_view = glm::rotate(m_view, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	if (input.isKeyDown(SDLK_e)) {
 		// move right
-		m_model = glm::rotate(m_model, glm::radians(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		m_view = glm::rotate(m_view, glm::radians(-1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	if (input.isKeyPressed(SDLK_F2)) {
@@ -263,6 +286,10 @@ void GameScreen::draw()
 		{
 			for (int z = 0; z < 16; z++)
 			{
+				if (y > 2) {
+					m_blocks[x][y][z]->setActive(false);
+				}
+
 				m_blocks[x][y][z]->render(m_textureProgram, m_model);
 			}
 		}
@@ -276,13 +303,8 @@ void GameScreen::draw()
 	
 
 	m_textureProgram.unBind();
-	glPopMatrix();
-	
-	glLoadIdentity();
 
 	m_spriteProgram.bind();
-
-	
 	glm::mat4  projectionMatrixHUD = m_hudCamera.getCameraMatrix();
 	GLint pUniformHUD = m_spriteProgram.getUniformLocation("P");
 	glUniformMatrix4fv(pUniformHUD, 1, GL_FALSE, glm::value_ptr(projectionMatrixHUD));

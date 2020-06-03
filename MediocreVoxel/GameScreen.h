@@ -43,7 +43,8 @@ private:
 	MediocreEngine::GLSLProgram m_spriteProgram;
 	MediocreEngine::Window * m_window;
 
-
+	unsigned int VAO;
+	unsigned int VBO;
 
 	Block* m_blocks[16][16][16];
 
@@ -56,5 +57,6 @@ private:
 	glm::mat4 m_view;
 
 	bool isWireframe;
+	bool isLooking;
 
 };

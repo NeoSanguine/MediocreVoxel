@@ -4,7 +4,7 @@
 
 Block::Block()
 {
-	
+	this->type = BlockType::AIR;
 }
 
 Block::~Block()
@@ -13,8 +13,10 @@ Block::~Block()
 	glDeleteBuffers(1, &VBO);
 }
 
-void Block::init(const glm::vec3& position)
+void Block::init(const glm::vec3& position, BlockType type)
 {
+	this->type = type;
+
 	float vertices[] = {
 		-0.5f, -0.5f, -0.5f,
 		 0.5f, -0.5f, -0.5f,
@@ -90,20 +92,25 @@ void Block::update(float deltaTime)
 
 void Block::render(MediocreEngine::GLSLProgram program, glm::mat4 model)
 {
-	glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+	if (active) {
+
+		glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+
+		int colorLocation = program.getUniformLocation("vertexColor");
+		glUniform4f(colorLocation, (float)m_color.r / 255.0f, (float)m_color.g / 255.0f, (float)m_color.b / 255.0f, (float)m_color.a / 255.0f);
+
+		// position our model matrix according to our world position
+		model = glm::translate(model, glm::vec3(m_position.x, m_position.y, m_position.z));
+
+		// update our model matrix
+		int modelLocation = program.getUniformLocation("model");
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+	}
+
 	
-	int colorLocation = program.getUniformLocation("vertexColor");
-	glUniform4f(colorLocation, (float)m_color.r / 255.0f, (float)m_color.g / 255.0f, (float)m_color.b / 255.0f, (float)m_color.a / 255.0f);
-
-	// position our model matrix according to our world position
-	model = glm::translate(model, glm::vec3(m_position.x, m_position.y, m_position.z));
-
-	// update our model matrix
-	int modelLocation = program.getUniformLocation("model");
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-	glBindVertexArray(0);
 }
 
 void Block::setPosition(const glm::vec3& position)
@@ -121,4 +128,9 @@ void Block::setColor(int r, int g, int b, int a)
 	m_color.r = r;
 	m_color.g = g;
 	m_color.b = b;
+}
+
+void Block::setActive(bool active)
+{
+	this->active = active;
 }
