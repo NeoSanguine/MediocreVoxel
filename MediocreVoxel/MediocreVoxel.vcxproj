@@ -133,12 +133,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Block.cpp" />
     <ClCompile Include="GameScreen.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="Block.h" />
     <ClInclude Include="GameScreen.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\shaders\textureShading.frag" />
+    <None Include="bin\shaders\textureShading.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
