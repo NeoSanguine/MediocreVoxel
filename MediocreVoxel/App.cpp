@@ -16,6 +16,7 @@ void App::onInit()
 	//std::cout << "Setting fullscreen" << std::endl;
 	//m_window.setWindowSize(1280, 720); // 
 	//m_window.setFlags(SDL_WINDOW_FULLSCREEN);
+	
 
 	m_window.setWindowSize(1280, 720); // 
 

@@ -13,6 +13,14 @@
 namespace
 {
 	//Block* m_pBlocks[32][32][32]
+
+	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	float yaw = -90.0f;
+	float pitch = 0.0f;
+	bool firstMouse = true;
+	float lastX = 400, lastY = 300;
 }
 
 
@@ -28,7 +36,7 @@ GameScreen::GameScreen(MediocreEngine::Window* window) : m_window(window)
 
 GameScreen::~GameScreen()
 {
-
+	delete m_camera;
 }
 
 int GameScreen::getNextScreenIndex() const
@@ -76,6 +84,8 @@ void GameScreen::onEnter()
 	m_hudCamera.init(m_window->getScreenWidth(), m_window->getScreenHeight());
 	m_hudCamera.setPosition(glm::vec2(m_window->getScreenWidth() / 2.0f, m_window->getScreenHeight() / 2.0f));
 
+	
+
 
 	m_model = glm::mat4(1.0f);
 	m_view = glm::mat4(1.0f);
@@ -85,7 +95,7 @@ void GameScreen::onEnter()
 	isLooking = false;
 
 
-	for (int x = 0; x < 16; x++)
+	/*for (int x = 0; x < 16; x++)
 	{
 		for (int y = 0; y < 16; y++)
 		{
@@ -121,9 +131,21 @@ void GameScreen::onEnter()
 				// Render m_pBlocks[x][y][z]
 			}
 		}
-	}
+	}*/
 
+	m_chunk = new Chunk();
+
+	//SDL_WarpMouseInWindow(m_window->getWindow(), m_window->getScreenWidth(), m_window->getScreenHeight());
+	//SDL_SetWindowGrab(m_window->getWindow(), SDL_TRUE);
+	//SDL_SetRelativeMouseMode(SDL_TRUE); // bind the cursor to the window
+
+	//SDL_CaptureMouse(SDL_TRUE);
+
+	SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+	SDL_CaptureMouse(SDL_TRUE);
 	
+	m_camera = new Camera3D();
 }
 
 void GameScreen::onExit()
@@ -131,9 +153,16 @@ void GameScreen::onExit()
 	
 	m_textureProgram.dispose();
 }
-void GameScreen::handleInput()
+void GameScreen::handleInput(float deltaTime)
 {
 	auto input = MediocreEngine::InputManager::get();
+
+	const float cameraSpeed = 0.025f * deltaTime; // adjust accordingly
+
+
+	if (input.isKeyDown(SDLK_ESCAPE)) {
+		m_game->exitGame();
+	}
 
 	if (input.isKeyDown(SDL_BUTTON_RIGHT)) {
 		isLooking = true;
@@ -146,47 +175,45 @@ void GameScreen::handleInput()
 
 	if (input.isKeyDown(SDLK_w)) {
 
-		// move forward
-		if (isLooking) {
-			m_view = glm::translate(m_view, glm::vec3(0.0f, 0.f, 0.1f));
-		}
-		else {
-			m_view = glm::translate(m_view, glm::vec3(0.0f, -0.1f, 0.0f));
-		}
-		
+		m_camera->processKeyboard(FORWARD, deltaTime);
 	}
 
 	if (input.isKeyDown(SDLK_d)) {
 		// move right
-		m_view = glm::translate(m_view, glm::vec3(-0.1f, 0.0f, 0.0f));
+		//cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
+		m_camera->processKeyboard(RIGHT, deltaTime);
 	}
 
 	if (input.isKeyDown(SDLK_a)) {
 		// move right
-		m_view = glm::translate(m_view, glm::vec3(0.1f, 0.0f, 0.0f));
-		
+		//cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		m_camera->processKeyboard(LEFT, deltaTime);
 	}
 
 	if (input.isKeyDown(SDLK_s)) {
 		// move right
 		// move forward
-		if (isLooking) {
+		/*if (isLooking) {
 			m_view = glm::translate(m_view, glm::vec3(0.0f, 0.f, -0.1f));
 		}
 		else {
-			m_view = glm::translate(m_view, glm::vec3(0.0f, 0.1f, 0.0f));
-		}
+			cameraPos -= cameraSpeed * cameraFront;
+		}*/
+
+		m_camera->processKeyboard(BACKWARD, deltaTime);
 		
 	}
 
 	if (input.isKeyDown(SDLK_q)) {
 		// move right
-		m_view = glm::rotate(m_view, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		//m_view = glm::rotate(m_view, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	if (input.isKeyDown(SDLK_e)) {
 		// move right
-		m_view = glm::rotate(m_view, glm::radians(-1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		//m_view = glm::rotate(m_view, glm::radians(-1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		//SDL_WarpMouseInWindow(m_window->getWindow(), 0, 0);
 	}
 
 	if (input.isKeyPressed(SDLK_F2)) {
@@ -202,13 +229,84 @@ void GameScreen::handleInput()
 	}
 
 
+	//float mouseX = input.getMouseCoordsX();
+	//float mouseY = input.getMouseCoordsY();
+
+
+	int mouseX;
+	int mouseY;
+
+	//auto relativeMouse = SDL_GetRelativeMouseState(&mouseX, &mouseY);
+	SDL_GetMouseState(&mouseX, &mouseY);
+	
+
+	if (firstMouse)
+	{
+		lastX = mouseX;
+		lastY = mouseY;
+		firstMouse = false;
+	}
+
+	
+	float xoffset = mouseX - lastX;
+	float yoffset = lastY - mouseY; // reversed since y-coordinates range from bottom to top
+
+	lastX = mouseX;
+	lastY = mouseY;
+
+
+	int relX;
+	int relY;
+
+	SDL_GetRelativeMouseState(&relX, &relY);
+
+	// makes it so we can rotate infinitely over the x axis
+	if (xoffset == 0) {
+		if (relX != 0) {
+			xoffset = relX;
+		}	
+	}
+
+	/*if (yoffset == 0) {
+		if (relY != 0) {
+			yoffset = relY;
+		}
+	}*/
+
+	//std::cout << xoffset << std::endl;
+
+	//SDL_WarpMouseInWindow(m_window->getWindow(), 1280 / 2, 720 / 2);
+
+	m_camera->processMouse(xoffset, yoffset);
+	
+	
+
+	/*const float sensitivity = 1.0f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+	cameraFront = glm::normalize(direction);
+	*/
 }
 
 
 void GameScreen::update(float deltaTime)
 {
 	checkInput();
-	handleInput();
+	handleInput(deltaTime);
 
 	const float radius = 10.0f;
 	float camX = sin(deltaTime) * radius;
@@ -216,7 +314,7 @@ void GameScreen::update(float deltaTime)
 	//m_view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	//m_textureProgram.unBind();
 
-	for (int x = 0; x < 16; x++)
+	/*for (int x = 0; x < 16; x++)
 	{
 		for (int y = 0; y < 16; y++)
 		{
@@ -225,9 +323,19 @@ void GameScreen::update(float deltaTime)
 				m_blocks[x][y][z]->update(deltaTime);
 			}
 		}
-	}
+	}*/
+
+	
+
+	m_chunk->update(deltaTime);
 
 	m_hudCamera.update(deltaTime);
+
+	//glm::vec3 direction;
+	//direction.x = cos(glm::radians(yaw)); // Note that we convert the angle to radians first
+	//direction.z = sin(glm::radians(yaw));
+
+	m_view = m_camera->getViewMatrix();//glm::lookAt(m_camera->position, m_camera->position + m_camera->front, cameraUp);
 }
 
 void GameScreen::draw()
@@ -241,10 +349,10 @@ void GameScreen::draw()
 	// Accept fragment if it closer to the camera than the former one
 	//glDepthFunc(GL_LESS);
 
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	m_proj = glm::perspective(glm::radians(90.0f), (float)m_window->getScreenWidth() / (float)m_window->getScreenHeight(), 0.1f, 500.0f);
+	m_proj = glm::perspective(glm::radians(m_camera->zoom), (float)m_window->getScreenWidth() / (float)m_window->getScreenHeight(), 0.1f, 500.0f);
 
 	//glm::mat4 model = glm::mat4(1.0f);
 	//m_model = glm::rotate(m_model, glm::radians(-1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
@@ -280,7 +388,7 @@ void GameScreen::draw()
 
 	//glColor3f(1.0f, 0.0f, 0.0f);
 
-	for (int x = 0; x < 16; x++)
+	/*for (int x = 0; x < 16; x++)
 	{
 		for (int y = 0; y < 16; y++)
 		{
@@ -293,7 +401,9 @@ void GameScreen::draw()
 				m_blocks[x][y][z]->render(m_textureProgram, m_model);
 			}
 		}
-	}
+	}*/
+
+	m_chunk->render(m_textureProgram, m_model);
 	
 
 	if (isWireframe) {
@@ -320,11 +430,16 @@ void GameScreen::checkInput()
 	{
 		if (evnt.type == SDL_MOUSEWHEEL)
 		{
-			m_view = glm::translate(m_view, glm::vec3(0.0f, 0.0f, evnt.wheel.y * 0.1f));
+			m_camera->processMouseScroll(evnt.wheel.y);
+			//m_view = glm::translate(m_view, glm::vec3(0.0f, 0.0f, evnt.wheel.y * 0.1f));
 		}
+
 		m_game->onSDLEvent(evnt);
 
+		
 	}	
+
+	
 }
 
 void GameScreen::drawHud()

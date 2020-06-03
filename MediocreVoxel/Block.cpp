@@ -92,7 +92,7 @@ void Block::update(float deltaTime)
 
 void Block::render(MediocreEngine::GLSLProgram program, glm::mat4 model)
 {
-	if (active) {
+	if (m_active) {
 
 		glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 
@@ -111,6 +111,11 @@ void Block::render(MediocreEngine::GLSLProgram program, glm::mat4 model)
 	}
 
 	
+}
+
+bool Block::isActive()
+{
+	return m_active;
 }
 
 void Block::setPosition(const glm::vec3& position)
@@ -132,5 +137,5 @@ void Block::setColor(int r, int g, int b, int a)
 
 void Block::setActive(bool active)
 {
-	this->active = active;
+	this->m_active = active;
 }

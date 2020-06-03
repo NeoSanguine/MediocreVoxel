@@ -20,6 +20,8 @@ public:
 
 	void render(MediocreEngine::GLSLProgram program, glm::mat4 model);
 
+	bool isActive();
+
 	void setPosition(const glm::vec3& position);
 	void setColor(MediocreEngine::ColorRGBA8 color);
 	void setColor(int r, int g, int b, int a);
@@ -30,6 +32,6 @@ private:
 	glm::vec3 m_position;
 	unsigned int VBO = 0;
 	unsigned int VAO = 0;
-	bool active = true;
+	bool m_active = true;
 	BlockType type;
 };

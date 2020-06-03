@@ -11,6 +11,8 @@
 #include <MediocreEngine/SpriteBatch.h>
 #include <MediocreEngine/SpriteFont.h>
 #include <MediocreEngine/Camera2D.h>
+#include "Camera3D.h"
+#include "Chunk.h"
 
 class GameScreen : public MediocreEngine::IScreen
 {
@@ -26,7 +28,7 @@ public:
 	virtual void onEnter() override;
 	virtual void onExit() override;
 	// TODO: add abstract to IGame class in MediocreEngine, and override here
-	void handleInput();
+	void handleInput(float deltaTime);
 	virtual void update(float deltaTime) override;
 	virtual void draw() override;
 
@@ -46,11 +48,13 @@ private:
 	unsigned int VAO;
 	unsigned int VBO;
 
-	Block* m_blocks[16][16][16];
+	Chunk * m_chunk;
 
 	MediocreEngine::SpriteBatch m_hudSpriteBatch;
 	MediocreEngine::SpriteFont* m_spriteFont;
 	MediocreEngine::Camera2D m_hudCamera;
+
+	Camera3D * m_camera;
 	
 	glm::mat4 m_proj;
 	glm::mat4 m_model;
