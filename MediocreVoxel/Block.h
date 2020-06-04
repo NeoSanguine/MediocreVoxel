@@ -14,7 +14,7 @@ public:
 	Block();
 	~Block();
 
-	void init(const glm::vec3& position, BlockType type = BlockType::AIR);
+	void init(const glm::vec3& position, BlockType type = BlockType::GRASS);
 
 	void update(float deltaTime);
 

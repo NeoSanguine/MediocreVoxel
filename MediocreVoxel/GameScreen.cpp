@@ -133,7 +133,8 @@ void GameScreen::onEnter()
 		}
 	}*/
 
-	m_chunk = new Chunk();
+	m_chunkManager = new ChunkManager();
+	m_chunkManager->init();
 
 	//SDL_WarpMouseInWindow(m_window->getWindow(), m_window->getScreenWidth(), m_window->getScreenHeight());
 	//SDL_SetWindowGrab(m_window->getWindow(), SDL_TRUE);
@@ -206,14 +207,11 @@ void GameScreen::handleInput(float deltaTime)
 	}
 
 	if (input.isKeyDown(SDLK_q)) {
-		// move right
-		//m_view = glm::rotate(m_view, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		//m_chunk->setAllInactive();
 	}
 
 	if (input.isKeyDown(SDLK_e)) {
-		// move right
-		//m_view = glm::rotate(m_view, glm::radians(-1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		//SDL_WarpMouseInWindow(m_window->getWindow(), 0, 0);
+		//m_chunk->setAllActive();
 	}
 
 	if (input.isKeyPressed(SDLK_F2)) {
@@ -327,7 +325,8 @@ void GameScreen::update(float deltaTime)
 
 	
 
-	m_chunk->update(deltaTime);
+	//m_chunk->update(deltaTime);
+	m_chunkManager->update(deltaTime, m_camera->position, m_camera->getViewMatrix());
 
 	m_hudCamera.update(deltaTime);
 
@@ -403,7 +402,8 @@ void GameScreen::draw()
 		}
 	}*/
 
-	m_chunk->render(m_textureProgram, m_model);
+	m_chunkManager->render(m_textureProgram, m_model);
+	//m_chunk->render(m_textureProgram, m_model);
 	
 
 	if (isWireframe) {

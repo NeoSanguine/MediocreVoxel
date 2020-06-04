@@ -82,7 +82,7 @@ void Block::init(const glm::vec3& position, BlockType type)
 
 	m_position = position;
 
-	m_color = MediocreEngine::ColorRGBA8(255, 0, 0);
+	m_color = MediocreEngine::ColorRGBA8(255, 255, 255);
 }
 
 void Block::update(float deltaTime)
@@ -125,6 +125,7 @@ void Block::setPosition(const glm::vec3& position)
 
 void Block::setColor(MediocreEngine::ColorRGBA8 color)
 {
+	
 	m_color = color;
 }
 
@@ -133,6 +134,7 @@ void Block::setColor(int r, int g, int b, int a)
 	m_color.r = r;
 	m_color.g = g;
 	m_color.b = b;
+	m_color.a = a;
 }
 
 void Block::setActive(bool active)

@@ -12,7 +12,7 @@
 #include <MediocreEngine/SpriteFont.h>
 #include <MediocreEngine/Camera2D.h>
 #include "Camera3D.h"
-#include "Chunk.h"
+#include "ChunkManager.h"
 
 class GameScreen : public MediocreEngine::IScreen
 {
@@ -48,7 +48,7 @@ private:
 	unsigned int VAO;
 	unsigned int VBO;
 
-	Chunk * m_chunk;
+	ChunkManager * m_chunkManager;
 
 	MediocreEngine::SpriteBatch m_hudSpriteBatch;
 	MediocreEngine::SpriteFont* m_spriteFont;

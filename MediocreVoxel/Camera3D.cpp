@@ -1,5 +1,6 @@
 #include <gtc/matrix_transform.hpp>
 #include "Camera3D.h"
+#include <iostream>
 
 
 Camera3D::Camera3D(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
@@ -32,22 +33,32 @@ glm::mat4 Camera3D::getViewMatrix()
 void Camera3D::processKeyboard(CAMERA_MOVEMENT direction, float deltaTime)
 {
 	float veloctiy = movementSpeed * deltaTime;
+	
+	if (hasCameraMoved) {
+		hasCameraMoved = false;
+	}
 
 	if (direction == FORWARD) {
 		position += front * veloctiy;
+		hasCameraMoved = true;
 	}
 
 	if (direction == BACKWARD) {
 		position -= front * veloctiy;
+		hasCameraMoved = true;
 	}
 
 	if (direction == LEFT) {
 		position -= right * veloctiy;
+		hasCameraMoved = true;
 	}
 
 	if (direction == RIGHT) {
 		position += right * veloctiy;
+		hasCameraMoved = true;
 	}
+
+	//std::cout << hasCameraMoved << std::endl;
 }
 
 void Camera3D::processMouse(float xoffset, float yoffset, bool contrainPitch)
