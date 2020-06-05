@@ -112,7 +112,7 @@ void ChunkManager::update(float deltaTime, glm::vec3 cameraPosition, glm::mat4 c
 		for (int x = (int)cameraPosition.x; x < (int)cameraPosition.x + 10; x++) {
 			for (int z = (int)cameraPosition.z - 10; z < (int)cameraPosition.z; z++) {
 				if (!chunkExist(x , 0, z)) {
-					//createChunk(x, 0, z, false);
+					createChunk(x, 0, z, true);
 				}
 			}
 		}
@@ -149,13 +149,14 @@ void ChunkManager::update(float deltaTime, glm::vec3 cameraPosition, glm::mat4 c
 
 						
 
-						if (distX > 10 || distZ > 10) {
+						if (distX > 20 || distZ > 20) {
 							//chunk.second->m_blocks[x][y][z].erase();
 							//std::cout << m_chunkRemovalList.size() << std::endl;
 							//m_chunkRemovalList.push_back(glm::ivec3(x, y, z));
 							//m_blockRemovalList.insert(std::pair<glm::ivec3, Block*>(glm::ivec3(x,y,z), block.second));
 
-							m_blockRemovalList.push_back(BlockRemovalData(chunk.first, glm::ivec3(x, y, z)));
+							m_chunkRemovalList.push_back(chunk.first);
+							//m_blockRemovalList.push_back(BlockRemovalData(chunk.first, glm::ivec3(x, y, z)));
 						}
 
 					}
