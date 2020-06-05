@@ -7,6 +7,8 @@
 
 #include "BlockType.h"
 
+
+
 class Block {
 
 public:
@@ -14,7 +16,7 @@ public:
 	Block();
 	~Block();
 
-	void init(const glm::vec3& position, BlockType type = BlockType::GRASS);
+	void init(const glm::ivec3& position, BlockType type = BlockType::GRASS);
 
 	void update(float deltaTime);
 
@@ -26,6 +28,10 @@ public:
 	void setColor(MediocreEngine::ColorRGBA8 color);
 	void setColor(int r, int g, int b, int a);
 	void setActive(bool active);
+
+	glm::ivec3 getPosition();
+
+	void erase();
 
 private:
 	MediocreEngine::ColorRGBA8 m_color;

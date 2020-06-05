@@ -276,6 +276,9 @@ void GameScreen::handleInput(float deltaTime)
 	//SDL_WarpMouseInWindow(m_window->getWindow(), 1280 / 2, 720 / 2);
 
 	m_camera->processMouse(xoffset, yoffset);
+
+
+	m_chunkManager->handleEvents();
 	
 	
 

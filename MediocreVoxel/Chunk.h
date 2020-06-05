@@ -1,8 +1,22 @@
 #pragma once
 
 #include "Block.h"
+#include <unordered_map>
 
-const static int CHUNK_SIZE = 1;
+const static int CHUNK_SIZE = 2;
+
+struct BlockFunc
+{
+	size_t operator()(const glm::ivec3& k)const
+	{
+		return std::hash<int>()(k.x) ^ std::hash<int>()(k.y) ^ std::hash<int>()(k.z);
+	}
+
+	bool operator()(const glm::ivec3& a, const glm::ivec3& b, const glm::ivec3& c)const
+	{
+		return a.x == b.x && a.y == b.y && a.z == b.z;
+	}
+};
 
 class Chunk {
 
@@ -34,9 +48,23 @@ public:
 	void setColorAll(int r, int g, int b);
 	void setColorRandom();
 
-private:
+	void deleteBlocks();
+	void deleteBlock(int x, int y, int z);
+	void deleteBlock(glm::ivec3 blockPosition);
+
+	bool blockExist(int x, int y, int z);
+	bool blockExist(glm::ivec3 blockLocation);
+
+	bool isEmpty();
+
 	// block data
 	Block*** m_blocks;
+	//std::unordered_map<glm::ivec3, Block*, BlockFunc> m_blocks;
+
+	glm::ivec3 getPosition();
+
+private:
+	glm::ivec3 m_position;
 	unsigned int VBO = 0;
 	unsigned int VAO = 0;
 	bool m_loaded = false;

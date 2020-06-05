@@ -9,11 +9,10 @@ Block::Block()
 
 Block::~Block()
 {
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
+	
 }
 
-void Block::init(const glm::vec3& position, BlockType type)
+void Block::init(const glm::ivec3& position, BlockType type)
 {
 	this->type = type;
 
@@ -141,3 +140,18 @@ void Block::setActive(bool active)
 {
 	this->m_active = active;
 }
+
+glm::ivec3 Block::getPosition()
+{
+	return m_position;
+}
+
+void Block::erase()
+{
+
+	m_active = false;
+
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+}
+
