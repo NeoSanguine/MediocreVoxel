@@ -22,7 +22,7 @@ public:
 
 	void update(float deltaTime);
 
-	void render(MediocreEngine::GLSLProgram program, glm::mat4 model);
+	void render(MediocreEngine::GLSLProgram program, glm::mat4 model, glm::ivec3 renderPosition);
 
 	bool isActive();
 

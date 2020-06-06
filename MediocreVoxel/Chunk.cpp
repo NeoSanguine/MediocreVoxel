@@ -5,7 +5,7 @@
 
 
 
-Chunk::Chunk()
+Chunk::Chunk(glm::ivec3 position)
 {
 	//m_blocks = std::unordered_map<glm::ivec3, Block*, BlockFunc>();
 
@@ -20,6 +20,8 @@ Chunk::Chunk()
 		}
 
 	}*/
+
+	m_chunkPosition = position;
 
 
 	// Create the blocks
@@ -87,7 +89,16 @@ void Chunk::render(MediocreEngine::GLSLProgram program, glm::mat4 model)
 		for (int x = 0; x < CHUNK_SIZE; x++) {
 			for (int y = 0; y < CHUNK_SIZE; y++) {
 				for (int z = 0; z < CHUNK_SIZE; z++) {
-					m_blocks[x][y][z].render(program, model);
+
+
+					glm::ivec3 renderPosition;
+					
+					//add the parent chunk position * CHUNK_SIZE  to get the proper location
+					renderPosition.x = (m_chunkPosition.x * CHUNK_SIZE) + x;
+					renderPosition.y = (m_chunkPosition.y * CHUNK_SIZE) + y;
+					renderPosition.z = (m_chunkPosition.z * CHUNK_SIZE) + z;
+
+					m_blocks[x][y][z].render(program, model, renderPosition);
 				}
 			}
 		}
@@ -361,7 +372,8 @@ bool Chunk::isEmpty()
 	return empty;
 }
 
-glm::ivec3 Chunk::getPosition()
+glm::ivec3 Chunk::getChunkPosition()
 {
-	return glm::ivec3();
+	return m_chunkPosition;
 }
+

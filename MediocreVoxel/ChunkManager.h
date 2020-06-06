@@ -12,9 +12,9 @@ const int MIN_CHUNKS_X = 0;
 const int MIN_CHUNKS_Y = 0;
 const int MIN_CHUNKS_Z = 0;
 
-const int MAX_CHUNKS_X = 1;
+const int MAX_CHUNKS_X = 5;
 const int MAX_CHUNKS_Y = 1;
-const int MAX_CHUNKS_Z = 1;
+const int MAX_CHUNKS_Z = 5;
 
 class BlockRemovalData {
 public:

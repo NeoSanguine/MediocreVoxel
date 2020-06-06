@@ -16,7 +16,7 @@ void ChunkManager::init()
 			for (int z = 0; z < MAX_CHUNKS_Z; z++) {
 
 
-				m_chunks.insert(std::make_pair(glm::ivec3(x, y, z), new Chunk()));
+				m_chunks.insert(std::make_pair(glm::ivec3(x, y, z), new Chunk(glm::ivec3(x,y,z))));
 
 				m_chunks.at(glm::ivec3(x, y, z))->createMesh(x,y,z);
 
@@ -220,7 +220,7 @@ void ChunkManager::render(MediocreEngine::GLSLProgram program, glm::mat4 model)
 
 void ChunkManager::createChunk(int x, int y, int z, bool partyColor /*= false*/)
 {
-	m_chunks.insert(std::make_pair(glm::ivec3(x, y, z), new Chunk()));
+	m_chunks.insert(std::make_pair(glm::ivec3(x, y, z), new Chunk(glm::ivec3(x,y,z))));
 	m_chunks.at(glm::ivec3(x, y, z))->createMesh(x, y, z);
 
 	if (partyColor) {

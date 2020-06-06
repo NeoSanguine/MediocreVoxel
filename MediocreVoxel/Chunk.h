@@ -6,7 +6,7 @@
 #include "VAO.h"
 #include "VBO.h"
 
-const static int CHUNK_SIZE = 8;
+const static int CHUNK_SIZE = 3;
 
 struct BlockFunc
 {
@@ -27,7 +27,7 @@ public:
 
 	
 
-	Chunk();
+	Chunk(glm::ivec3 postion);
 	~Chunk();
 
 	void update(float deltaTime);
@@ -64,10 +64,10 @@ public:
 	Block*** m_blocks;
 	//std::unordered_map<glm::ivec3, Block*, BlockFunc> m_blocks;
 
-	glm::ivec3 getPosition();
+	glm::ivec3 getChunkPosition();
 
 private:
-	glm::ivec3 m_position;
+	glm::ivec3 m_chunkPosition;
 	bool m_loaded = false;
 	bool m_setup = false;
 

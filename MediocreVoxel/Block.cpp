@@ -99,7 +99,7 @@ void Block::update(float deltaTime)
 	//update blocks attributes
 }
 
-void Block::render(MediocreEngine::GLSLProgram program, glm::mat4 model)
+void Block::render(MediocreEngine::GLSLProgram program, glm::mat4 model, glm::ivec3 renderPosition)
 {
 	if (m_active) {
 
@@ -110,7 +110,7 @@ void Block::render(MediocreEngine::GLSLProgram program, glm::mat4 model)
 		glUniform4f(colorLocation, (float)m_color.r / 255.0f, (float)m_color.g / 255.0f, (float)m_color.b / 255.0f, (float)m_color.a / 255.0f);
 
 		// position our model matrix according to our world position
-		model = glm::translate(model, glm::vec3(m_position.x, m_position.y, m_position.z));
+		model = glm::translate(model, glm::vec3(renderPosition.x, renderPosition.y, renderPosition.z));
 
 		// update our model matrix
 		int modelLocation = program.getUniformLocation("model");
