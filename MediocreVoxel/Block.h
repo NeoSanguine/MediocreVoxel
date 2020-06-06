@@ -6,6 +6,8 @@
 #include <GL/glew.h>
 
 #include "BlockType.h"
+#include "VAO.h"
+#include "VBO.h"
 
 
 
@@ -30,14 +32,15 @@ public:
 	void setActive(bool active);
 
 	glm::ivec3 getPosition();
+	MediocreEngine::ColorRGBA8 getColor();
 
 	void erase();
 
 private:
 	MediocreEngine::ColorRGBA8 m_color;
 	glm::vec3 m_position;
-	unsigned int VBO = 0;
-	unsigned int VAO = 0;
+	struct VBO vbo;
+	struct VAO vao;
 	bool m_active = true;
 	BlockType type;
 };

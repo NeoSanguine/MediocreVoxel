@@ -3,6 +3,8 @@
 #include <random>
 #include <MediocreEngine/MediocreMath.h>
 
+
+
 Chunk::Chunk()
 {
 	//m_blocks = std::unordered_map<glm::ivec3, Block*, BlockFunc>();
@@ -35,6 +37,9 @@ Chunk::Chunk()
 	m_setup = true;
 	m_loaded = true;
 	
+	//vao = vao_create();
+	//vbo = vbo_create(GL_ARRAY_BUFFER, false);
+
 }
 
 Chunk::~Chunk()
@@ -103,8 +108,7 @@ void Chunk::createMesh(int posx, int posy, int posz)
 					continue;
 				}
 
-				createCube(x, y, z,
-					(x + posx * CHUNK_SIZE), (y + posy * CHUNK_SIZE), (z + posz * CHUNK_SIZE));
+				createCube(x, y, z,(x + posx * CHUNK_SIZE), (y + posy * CHUNK_SIZE), (z + posz * CHUNK_SIZE));
 
 			}
 		}

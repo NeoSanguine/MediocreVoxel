@@ -3,7 +3,10 @@
 #include "Block.h"
 #include <unordered_map>
 
-const static int CHUNK_SIZE = 2;
+#include "VAO.h"
+#include "VBO.h"
+
+const static int CHUNK_SIZE = 8;
 
 struct BlockFunc
 {
@@ -65,8 +68,6 @@ public:
 
 private:
 	glm::ivec3 m_position;
-	unsigned int VBO = 0;
-	unsigned int VAO = 0;
 	bool m_loaded = false;
 	bool m_setup = false;
 
