@@ -5,27 +5,13 @@
 
 #include "VAO.h"
 #include "VBO.h"
+#include "Vertex3D.h"
 
-const static int CHUNK_SIZE = 3;
-
-struct BlockFunc
-{
-	size_t operator()(const glm::ivec3& k)const
-	{
-		return std::hash<int>()(k.x) ^ std::hash<int>()(k.y) ^ std::hash<int>()(k.z);
-	}
-
-	bool operator()(const glm::ivec3& a, const glm::ivec3& b, const glm::ivec3& c)const
-	{
-		return a.x == b.x && a.y == b.y && a.z == b.z;
-	}
-};
+const static int CHUNK_SIZE = 16;
 
 class Chunk {
 
 public:
-
-	
 
 	Chunk(glm::ivec3 postion);
 	~Chunk();
@@ -34,17 +20,17 @@ public:
 
 	void render(MediocreEngine::GLSLProgram program, glm::mat4 model);
 
-	
+	void createMesh();
+	void recreateMesh();
 
-	void createMesh(int x, int y, int z);
-
-	void createCube(int x, int y, int z, int posx, int posy, int posz);
+	void initBlocks(int x, int y, int z);
 
 	bool isLoaded();
 
 	void load();
 
 	void unload();
+ 
 
 	void setAllActive();
 	void setAllInactive();
@@ -58,6 +44,8 @@ public:
 	bool blockExist(int x, int y, int z);
 	bool blockExist(glm::ivec3 blockLocation);
 
+	void updateMeshVisibility();
+
 	bool isEmpty();
 
 	// block data
@@ -67,8 +55,18 @@ public:
 	glm::ivec3 getChunkPosition();
 
 private:
+
+	void rebuildChunk();
+
 	glm::ivec3 m_chunkPosition;
 	bool m_loaded = false;
 	bool m_setup = false;
+	bool m_ShouldRebuild = false;
+
+	struct VBO m_vbo;
+	struct VAO m_vao;
+	struct VBO m_ibo;
+
+	std::vector<Vertex3D>m_vertices;
 
 };

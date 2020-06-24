@@ -2,7 +2,52 @@
 
 #include <random>
 #include <MediocreEngine/MediocreMath.h>
+#include <iostream>
+#include "Util.h"
 
+float vertices[] = {
+		-0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+
+		-0.5f, -0.5f,  0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
+
+		-0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+
+		-0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f, -0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
+		-0.5f, -0.5f, -0.5f,
+
+		-0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f,
+};
 
 
 Chunk::Chunk(glm::ivec3 position)
@@ -20,6 +65,9 @@ Chunk::Chunk(glm::ivec3 position)
 		}
 
 	}*/
+
+	m_vao = vao_create();
+	m_vbo = vbo_create(GL_ARRAY_BUFFER, false);
 
 	m_chunkPosition = position;
 
@@ -56,6 +104,8 @@ Chunk::~Chunk()
 
 	delete[] m_blocks;*/
 
+	//std::cout << "chunk destructor " << std::endl;
+
 	for (int i = 0; i < CHUNK_SIZE; ++i)
 	{
 		for (int j = 0; j < CHUNK_SIZE; ++j)
@@ -67,81 +117,184 @@ Chunk::~Chunk()
 	}
 	delete[] m_blocks;
 
+	vao_destroy(m_vao);
+	vbo_destroy(m_vbo);
+
 }
 
 void Chunk::update(float deltaTime)
 {
+
+	if (m_ShouldRebuild) {
+		//rebuildChunk();
+
+		m_ShouldRebuild = false;
+	}
+
 }
 
 void Chunk::render(MediocreEngine::GLSLProgram program, glm::mat4 model)
 {
-	/*if (m_loaded) {
-		for (int x = 0; x < CHUNK_SIZE; x++) {
-			for (int y = 0; y < CHUNK_SIZE; y++) {
-				for (int z = 0; z < CHUNK_SIZE; z++) {
-					m_blocks[x][y][z].render(program, model);
-				}
-			}
-		}
-	}*/
 
 	if (m_loaded) {
+
+		vao_bind(m_vao);
+
 		for (int x = 0; x < CHUNK_SIZE; x++) {
 			for (int y = 0; y < CHUNK_SIZE; y++) {
 				for (int z = 0; z < CHUNK_SIZE; z++) {
 
+					if (m_blocks[x][y][z].isActive()) {
+						glm::ivec3 renderPosition;
 
-					glm::ivec3 renderPosition;
+						//add the parent chunk position * CHUNK_SIZE  to get the proper location
+						renderPosition.x = (m_chunkPosition.x * CHUNK_SIZE) + x;
+						renderPosition.y = (m_chunkPosition.y * CHUNK_SIZE) + y;
+						renderPosition.z = (m_chunkPosition.z * CHUNK_SIZE) + z;
+
+						m_blocks[x][y][z].render(program, model, renderPosition);
+
+						glDrawArrays(GL_TRIANGLES, 0, 36);
+					}
+
 					
-					//add the parent chunk position * CHUNK_SIZE  to get the proper location
-					renderPosition.x = (m_chunkPosition.x * CHUNK_SIZE) + x;
-					renderPosition.y = (m_chunkPosition.y * CHUNK_SIZE) + y;
-					renderPosition.z = (m_chunkPosition.z * CHUNK_SIZE) + z;
-
-					m_blocks[x][y][z].render(program, model, renderPosition);
 				}
 			}
 		}
+
+		
+
+		vao_unbind();
 	}
 	
 	
 
 }
 
-void Chunk::createMesh(int posx, int posy, int posz)
+void Chunk::createMesh()
 {
+	// build the mesh in a way where we throw away the vertices that aren't in view of the CHUNK
 	for (int x = 0; x < CHUNK_SIZE; x++) {
 		for (int y = 0; y < CHUNK_SIZE; y++) {
 			for (int z = 0; z < CHUNK_SIZE; z++) {
 
-				// if the block is not active
-				if (m_blocks[x][y][z].isActive() == false) {
-					continue;
+				Block* block = &m_blocks[x][y][z];
+
+				bool px = false; // positive x
+				bool nx = false; // negative x
+				bool py = false; // positive y
+				bool ny = false; // negative y
+				bool pz = false; // positive z
+				bool nz = false; // negative z
+
+				//PX
+				if (x < CHUNK_SIZE - 1) {
+					if (block->isActive() == m_blocks[x + 1][y][z].isActive()) {
+						px = true;
+					}
 				}
 
-				createCube(x, y, z,(x + posx * CHUNK_SIZE), (y + posy * CHUNK_SIZE), (z + posz * CHUNK_SIZE));
+
+				//NX
+				if (x > 0) {
+					if (block->isActive() == m_blocks[x - 1][y][z].isActive()) {
+						nx = true;
+					}
+				}
+
+				//PY
+				if (y < CHUNK_SIZE - 1) {
+					if (block->isActive() == m_blocks[x][y + 1][z].isActive()) {
+						py = true;
+					}
+				}
+
+
+				//NY
+				if (y > 0) {
+					if (block->isActive() == m_blocks[x][y - 1][z].isActive()) {
+						ny = true;
+					}
+				}
+
+				//PZ
+				if (z < CHUNK_SIZE - 1) {
+					if (block->isActive() == m_blocks[x][y][z + 1].isActive()) {
+						pz = true;
+					}
+				}
+
+
+				//NZ
+				if (z > 0) {
+					if (block->isActive() == m_blocks[x][y][z - 1].isActive()) {
+						nz = true;
+					}
+				}
+
+				// add visible faces to the chunk mesh
+				if (px && py && pz && nx && ny && nz) {
+					block->setActive(false);
+					//block->setColor(MediocreEngine::ColorRGBA8(255, 0, 0));
+				}		
+				else if (x == 0 || y == 0 || z == 0 || x == CHUNK_SIZE-1 || y == CHUNK_SIZE - 1 || z == CHUNK_SIZE - 1) {
+					//block->setColor(MediocreEngine::ColorRGBA8(0, 255, 0));
+				}
+				else {
+					block->setActive(false);
+					//block->setColor(MediocreEngine::ColorRGBA8(0, 0, 255));
+				}
+				
+
+
+
+
+
 
 			}
 		}
 	}
 
-	/*for (auto& block : m_blocks) {
-		if (block.second->isActive() == false) {
-			continue;
-		}
 
-		// multiply the world position by the chunk size so that the blocks don't appear inside of one another
-		createCube(block.first.x, block.first.y, block.first.z,
-			(block.first.x + posx * CHUNK_SIZE) , (block.first.y + posy * CHUNK_SIZE) , (block.first.z + posz * CHUNK_SIZE) );
-	}*/
+	//  then bind and set vertex buffer(s), and then configure vertex attributes(s).
+	vao_bind(m_vao);
 
+	vbo_bind(m_vbo);
+
+	vbo_buffer(m_vbo, vertices, 0, sizeof(vertices));
+
+	vao_attribute(m_vao, m_vbo, 0, 3, GL_FLOAT, 3 * sizeof(float), 0);
+
+	vbo_unbind(m_vbo);
+
+	vao_unbind();
 
 }
 
-void Chunk::createCube(int x, int y, int z, int posx, int posy, int posz)
+
+void Chunk::recreateMesh()
 {
-	//m_blocks.at(glm::ivec3(x, y, z))->init(glm::vec3(posx, posy, posz), BlockType::GRASS);
-	m_blocks[x][y][z].init(glm::ivec3(posx, posy, posz), BlockType::GRASS);
+	// clear the vbo
+
+	//vao_destroy(m_vao);
+	vbo_destroy(m_vbo);
+
+	//m_vao = vao_create();
+	m_vbo = vbo_create(GL_ARRAY_BUFFER, false);
+
+	createMesh();
+}
+
+void Chunk::initBlocks(int x, int y, int z)
+{
+	for (int x = 0; x < CHUNK_SIZE; x++) {
+		for (int y = 0; y < CHUNK_SIZE; y++) {
+			for (int z = 0; z < CHUNK_SIZE; z++) {
+				m_blocks[x][y][z].init(BlockType::GRASS);
+			}
+		}
+	}
+	
 }
 
 bool Chunk::isLoaded()
@@ -161,26 +314,30 @@ void Chunk::unload()
 
 void Chunk::setAllActive()
 {
-	/*for (int x = 0; x < CHUNK_SIZE; x++) {
+	for (int x = 0; x < CHUNK_SIZE; x++) {
 		for (int y = 0; y < CHUNK_SIZE; y++) {
 			for (int z = 0; z < CHUNK_SIZE; z++) {
 
 				m_blocks[x][y][z].setActive(true);
 			}
 		}
-	}*/
+	}
+
+	m_ShouldRebuild = true;
 }
 
 void Chunk::setAllInactive()
 {
-	/*for (int x = 0; x < CHUNK_SIZE; x++) {
+	for (int x = 0; x < CHUNK_SIZE; x++) {
 		for (int y = 0; y < CHUNK_SIZE; y++) {
 			for (int z = 0; z < CHUNK_SIZE; z++) {
 
 				m_blocks[x][y][z].setActive(false);
 			}
 		}
-	}*/
+	}
+
+	m_ShouldRebuild = true;
 }
 
 void Chunk::setColorAll(int r, int g, int b)
@@ -239,53 +396,6 @@ void Chunk::setColorRandom()
 void Chunk::deleteBlocks()
 {
 	//delete every block in this chunk
-	/*for (auto block : m_blocks) {
-
-		if (block.second == nullptr) {
-			continue;
-		}
-
-		glm::ivec3 blockLocation = block.first;
-
-		delete m_blocks.at(blockLocation);
-		m_blocks.at(blockLocation) = nullptr;
-		m_blocks.erase(blockLocation);
-	}*/
-
-	
-	
-	/*for (std::pair<glm::ivec3, Block*> element : m_blocks)
-	{
-		delete element.second;
-		element.second = nullptr;
-		m_blocks.erase(element.first);
-	}*/
-
-	// Iterator pointing to first element in map
-	//std::unordered_map<glm::ivec3, Block*>::iterator it = m_blocks.begin();
-
-	/*while (it != m_blocks.end()) {
-
-		if (it->second != nullptr) {
-			delete it->second;
-			it->second = nullptr;
-			it = m_blocks.erase(it);
-		}
-		else {
-			it++;
-		}
-		
-
-		
-	}*/
-
-	/*std::for_each(m_blocks.begin(), m_blocks.end(), [](std::pair<glm::ivec3, Block* > element) {
-		delete element.second;
-		element.second = nullptr;
-		});
-
-	m_blocks.clear();*/
-
 	for (int x = 0; x < CHUNK_SIZE; x++) {
 		for (int y = 0; y < CHUNK_SIZE; y++) {
 			for (int z = 0; z < CHUNK_SIZE; z++) {
@@ -295,22 +405,14 @@ void Chunk::deleteBlocks()
 		}
 	}
 
+	m_ShouldRebuild = false;
 }
 
 void Chunk::deleteBlock(int x, int y, int z)
 {
-	/*glm::ivec3 blockLocation = glm::ivec3(x, y, z);
-
-	if (blockExist(blockLocation)) {
-		
-		delete m_blocks.at(blockLocation);
-		m_blocks.at(blockLocation) = nullptr;
-		m_blocks.erase(blockLocation);
-
-	}*/
-
-
 	m_blocks[x][y][z].erase();
+
+	m_ShouldRebuild = true;
 
 }
 
@@ -318,20 +420,9 @@ void Chunk::deleteBlock(glm::ivec3 blockLocation)
 {
 
 	// check if the block is visible
-	if (m_blocks[blockLocation.x][blockLocation.y][blockLocation.z].isActive())
-	{
-		m_blocks[blockLocation.x][blockLocation.y][blockLocation.z].erase();
-	}
-
-	/*if (blockExist(blockLocation)) {
-
-		//delete m_blocks.at(blockLocation);
-		//m_blocks.at(blockLocation) = nullptr;
-		//m_blocks.erase(blockLocation);
-
-		m_blocks[blockLocation.x][blockLocation.y][blockLocation.z] = NULL;
-
-	}*/
+	m_blocks[blockLocation.x][blockLocation.y][blockLocation.z].erase();
+	// now we want to rebuild the chunk and ignore any inactive 
+	m_ShouldRebuild = true;
 }
 
 bool Chunk::blockExist(int x, int y, int z)
@@ -354,26 +445,63 @@ bool Chunk::blockExist(glm::ivec3 blockLocation)
 	return true;
 }
 
+// loop through all of the blocks, and if the block on the outer most layer is active,
+// set everything inside to inactive, as we can't see the block anyways
+void Chunk::updateMeshVisibility()
+{
+	for (int x = 0; x < CHUNK_SIZE; x++) {
+		for (int y = 0; y < CHUNK_SIZE; y++) {
+			for (int z = 0; z < CHUNK_SIZE; z++) {
+
+				/*if (x != 0 && x != (CHUNK_SIZE - 1) &&
+					y != 0 && y != (CHUNK_SIZE - 1) &&
+					z != 0 && z != (CHUNK_SIZE - 1)) {
+					m_blocks[x][y][z].setActive(false);
+				}*/
+
+				// get the blocks on the outer most rim
+
+				// X FACE
+				if (x != (CHUNK_SIZE - 1) &&
+					y != (CHUNK_SIZE - 1) &&
+					z != (CHUNK_SIZE - 1)) {
+
+					m_blocks[x][y][z].setActive(false);
+
+				}
+
+			}
+		}
+	}
+
+	m_ShouldRebuild = true;
+}
+
 bool Chunk::isEmpty()
 {
-	bool empty = true;
-
+	// if any block we find is active, return false;
 	for (int x = 0; x < CHUNK_SIZE; x++) {
 		for (int y = 0; y < CHUNK_SIZE; y++) {
 			for (int z = 0; z < CHUNK_SIZE; z++) {
 
 				if (m_blocks[x][y][z].isActive()) {
-					empty = false;
+					return false;
 				}
 			}
 		}
 	}
 
-	return empty;
+	return true;
 }
 
-glm::ivec3 Chunk::getChunkPosition()
+glm::ivec3 Chunk::getChunkPosition()	
 {
 	return m_chunkPosition;
+}
+
+void Chunk::rebuildChunk()
+{
+	//std::cout << "recreating mesh" << std::endl;
+	recreateMesh();
 }
 

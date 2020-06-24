@@ -145,6 +145,8 @@ void GameScreen::onEnter()
 	SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	SDL_CaptureMouse(SDL_TRUE);
+	SDL_WarpMouseInWindow(m_window->getWindow(), m_window->getScreenWidth(), m_window->getScreenHeight());
+	m_window->setFlags(SDL_WINDOW_ALWAYS_ON_TOP);
 	
 	m_camera = new Camera3D();
 }
@@ -275,7 +277,7 @@ void GameScreen::handleInput(float deltaTime)
 
 	//SDL_WarpMouseInWindow(m_window->getWindow(), 1280 / 2, 720 / 2);
 
-	m_camera->processMouse(xoffset, yoffset);
+	m_camera->processMouse(xoffset, yoffset,true);
 
 
 	m_chunkManager->handleEvents();
@@ -346,8 +348,12 @@ void GameScreen::draw()
 
 	//Enable depth test
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 
 	glDisable(GL_CULL_FACE);
+	//glCullFace(GL_FRONT);  
+	
+	//glEnable(GL_CULL_FACE);
 	// Accept fragment if it closer to the camera than the former one
 	//glDepthFunc(GL_LESS);
 

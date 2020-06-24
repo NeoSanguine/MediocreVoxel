@@ -11,7 +11,7 @@ ChunkManager::ChunkManager()
 void ChunkManager::init()
 {
 
-	for (int x = 0; x < MAX_CHUNKS_X; x++) {
+	/*for (int x = 0; x < MAX_CHUNKS_X; x++) {
 		for (int y = 0; y < MAX_CHUNKS_Y; y++) {
 			for (int z = 0; z < MAX_CHUNKS_Z; z++) {
 
@@ -20,35 +20,17 @@ void ChunkManager::init()
 
 				m_chunks.at(glm::ivec3(x, y, z))->createMesh(x,y,z);
 
+				//m_chunks.at(glm::ivec3(x, y, z))->updateMeshVisibility();
+
 				m_chunks.at(glm::ivec3(x, y, z))->setColorRandom();
 			}
 		}
-	}
-	
-
-	/*for (auto chunk : m_chunks) {
-
-		if (chunk.second != nullptr) {
-
-			//todo check if the chunk is visible
-
-			chunk.second->createMesh(chunk.first.x * chunk.second->CHUNK_SIZE,
-				chunk.first.y * chunk.second->CHUNK_SIZE,
-				chunk.first.z * chunk.second->CHUNK_SIZE);
-		}
-
-
 	}*/
 
-	
-	//m_chunks.at(glm::ivec3(1, 0, 0))->setColorRandom();
-	//m_chunks.at(glm::ivec3(2, 0, 0))->setColorRandom();
+	//glm::ivec3 chunk1 = glm::ivec3(0, 0, 0);
 
-	//m_chunks.at(glm::ivec3(3, 0, 0))->setColorRandom();
-	//m_chunks.at(glm::ivec3(4, 0, 0))->setColorRandom();
-	//m_chunks.at(glm::ivec3(5, 0, 0))->setColorRandom();
-
-	
+	createChunk(0, 0, 0, false);
+	//createChunk(1, 0, 1, true);
 
 }
 
@@ -67,9 +49,12 @@ void ChunkManager::handleEvents()
 						for (int z = 0; z < CHUNK_SIZE; z++) {
 
 
+							//chunk.second->m_blocks[x][y][z].setActive(true);
+
 							if (x == 0 && y == 0 && z == 0) {
 								//std::cout << "erasing block" << std::endl;
-								//chunk.second->m_blocks[x][y][z].erase();
+								//chunk.second->deleteBlock(glm::ivec3(x, y, z));
+								
 								//delete chunk.second->m_blocks[x][y];
 								//chunk.second->m_blocks[x][y] = nullptr;
 							}
@@ -88,6 +73,12 @@ void ChunkManager::handleEvents()
 		
 	}
 
+	if (MediocreEngine::InputManager::get().isKeyPressed(SDLK_q)) {
+
+		std::cout << "Num Blocks: " << getNumBlocks() << std::endl;
+
+	}
+
 }
 
 void ChunkManager::update(float deltaTime, glm::vec3 cameraPosition, glm::mat4 cameraView)
@@ -98,8 +89,6 @@ void ChunkManager::update(float deltaTime, glm::vec3 cameraPosition, glm::mat4 c
 
 		if (chunk.second != nullptr) {
 
-			//todo check if the chunk is visible
-
 			chunk.second->update(deltaTime);
 		}
 
@@ -109,20 +98,26 @@ void ChunkManager::update(float deltaTime, glm::vec3 cameraPosition, glm::mat4 c
 	if (m_cameraPosition != cameraPosition || m_cameraView != cameraView) {
 
 		// create a chunk in the direction that the player is moving towards
-		for (int x = (int)cameraPosition.x; x < (int)cameraPosition.x + 10; x++) {
-			for (int z = (int)cameraPosition.z - 10; z < (int)cameraPosition.z; z++) {
-				if (!chunkExist(x , 0, z)) {
-					//createChunk(x, 0, z, true);
+		/*for (int x = 0; x < (int)cameraPosition.x + 10; x++) {
+			for (int z = (int)(cameraPosition.z - 10); z < (int)cameraPosition.z; z++) {
+				if (!chunkExist(x, 0, z)) {
+					createChunk(x, 0, z, true);
 				}
 			}
-		}
-
+		}*/
 		
 	}
 
+	
+
+	/*
 	for (auto& chunk : m_chunks) {
 
 		if (chunk.second != nullptr) {
+
+			if (chunk.second->isEmpty()) {
+				continue;
+			}
 
 			for (int x = 0; x < CHUNK_SIZE; x++) {
 				for (int y = 0; y < CHUNK_SIZE; y++) {
@@ -130,33 +125,40 @@ void ChunkManager::update(float deltaTime, glm::vec3 cameraPosition, glm::mat4 c
 
 
 						glm::ivec3 blockPosition;
-						glm::ivec3 worldPositon = chunk.second->m_blocks[x][y][z].getPosition();
+						glm::ivec3 worldPosition;
 
-						blockPosition.x = (worldPositon.x / CHUNK_SIZE);
-						blockPosition.y = (worldPositon.y / CHUNK_SIZE);
-						blockPosition.z = (worldPositon.z / CHUNK_SIZE);
+						glm::ivec3 chunkPosition = chunk.second->getChunkPosition();
 
-						int distX = (int)(cameraPosition.x - blockPosition.x);
-						int distZ = (int)(cameraPosition.z - blockPosition.z);
+						worldPosition.x = (chunkPosition.x * CHUNK_SIZE) + x;
+						worldPosition.y = (chunkPosition.y * CHUNK_SIZE) + y;
+						worldPosition.z = (chunkPosition.z * CHUNK_SIZE) + z;
+
+						int distX = (int)(cameraPosition.x - worldPosition.x);
+						int distY = (int)(cameraPosition.y - worldPosition.y);
+						int distZ = (int)(cameraPosition.z - worldPosition.z);
 
 						if (distX < 0) {
 							distX = -distX;
+						}
+
+						if (distY < 0) {
+							distY = -distY;
 						}
 
 						if (distZ < 0) {
 							distZ = -distZ;
 						}
 
+						//std::cout << dist << std::endl;
 						
 
-						if (distX > 20 || distZ > 20) {
-							//chunk.second->m_blocks[x][y][z].erase();
-							//std::cout << m_chunkRemovalList.size() << std::endl;
-							//m_chunkRemovalList.push_back(glm::ivec3(x, y, z));
+						if (distX > 10 || distZ > 10) {
 							//m_blockRemovalList.insert(std::pair<glm::ivec3, Block*>(glm::ivec3(x,y,z), block.second));
-
-							//m_chunkRemovalList.push_back(chunk.first);
-							//m_blockRemovalList.push_back(BlockRemovalData(chunk.first, glm::ivec3(x, y, z)));
+							//chunk.second->deleteBlock(glm::ivec3(x, y, z));
+							//chunk.second->m_blocks[x][y][z].setActive(false);
+							//std::cout << "world position: " << worldPosition.x << " " << worldPosition.y << " " << worldPosition.z << std::endl;
+							//std::cout << "trying to remove block at: " << x << " " << y << " " << z << std::endl;
+							m_chunkRemovalList.push_back(chunk.first);
 						}
 
 					}
@@ -167,40 +169,14 @@ void ChunkManager::update(float deltaTime, glm::vec3 cameraPosition, glm::mat4 c
 
 		}
 	}
-
-	/*
-	glm::ivec3 blockPosition;
-					glm::ivec3 worldPositon = block.second->getPosition();
-
-					blockPosition.x = (worldPositon.x / CHUNK_SIZE);
-					blockPosition.y = (worldPositon.y / CHUNK_SIZE);
-					blockPosition.z = (worldPositon.z / CHUNK_SIZE);
-
-					int distX = (int)(cameraPosition.x - blockPosition.x);
-					int distZ = (int)(cameraPosition.z - blockPosition.z);
-
-					if (distX < 0) {
-						distX = -distX;
-					}
-
-					if (distZ < 0) {
-						distZ = -distZ;
-					}
-
-					std::cout << distZ << std::endl;
-
-					if (distX > 10 || distZ > 10) {
-						m_blockRemovalList.insert(std::pair<glm::ivec3, Block*>(blockPosition, block.second));
-					}*/
-
-
+	*/
 	m_cameraPosition = cameraPosition;
 	m_cameraView = cameraView;
 
 	
 	updateBlockRemovalList();
 	updateChunkRemovalList();
-	clearEmptyChunks();
+	//clearEmptyChunks();
 }
 
 void ChunkManager::render(MediocreEngine::GLSLProgram program, glm::mat4 model)
@@ -220,8 +196,8 @@ void ChunkManager::render(MediocreEngine::GLSLProgram program, glm::mat4 model)
 
 void ChunkManager::createChunk(int x, int y, int z, bool partyColor /*= false*/)
 {
-	m_chunks.insert(std::make_pair(glm::ivec3(x, y, z), new Chunk(glm::ivec3(x,y,z))));
-	m_chunks.at(glm::ivec3(x, y, z))->createMesh(x, y, z);
+	m_chunks.insert(std::make_pair(glm::ivec3(x,y,z), new Chunk(glm::ivec3(x, y, z))));
+	m_chunks.at(glm::ivec3(x, y, z))->createMesh();
 
 	if (partyColor) {
 		m_chunks.at(glm::ivec3(x, y, z))->setColorRandom();
@@ -229,26 +205,15 @@ void ChunkManager::createChunk(int x, int y, int z, bool partyColor /*= false*/)
 	
 }
 
+
 bool ChunkManager::chunkExist(int x, int y, int z)
 {
-	auto chunk = m_chunks.find(glm::ivec3(x, y, z));
-
-	if (chunk == m_chunks.end()) {
-		return false;
-	}
-	
-	return true;
+	return m_chunks.find(glm::ivec3(x, y, z)) != m_chunks.end();
 }
 
 bool ChunkManager::chunkExist(glm::ivec3 chunkLocation)
 {
-	auto chunk = m_chunks.find(chunkLocation);
-
-	if (chunk == m_chunks.end()) {
-		return false;
-	}
-
-	return true;
+	return m_chunks.find(chunkLocation) != m_chunks.end();
 }
 
 void ChunkManager::deleteChunk(int x, int y, int z)
@@ -256,16 +221,17 @@ void ChunkManager::deleteChunk(int x, int y, int z)
 	glm::ivec3 chunkLocation = glm::ivec3(x, y, z);
 
 	// for every block in the chunk, delete it
-	//m_chunks.at(chunkLocation)->deleteBlocks();
+	m_chunks.at(chunkLocation)->deleteBlocks();
 
 	delete m_chunks.at(chunkLocation);
 	m_chunks.at(chunkLocation) = nullptr;
+
 	m_chunks.erase(chunkLocation);
 }
 
 void ChunkManager::deleteChunk(glm::ivec3 chunkLocation)
 {
-
+	
 	// for every block in the chunk, delete it
 	m_chunks.at(chunkLocation)->deleteBlocks();
 
@@ -274,6 +240,46 @@ void ChunkManager::deleteChunk(glm::ivec3 chunkLocation)
 	m_chunks.at(chunkLocation) = nullptr;
 
 	m_chunks.erase(chunkLocation);
+}
+
+bool ChunkManager::hasNeighbors(glm::ivec3 chunkPosition)
+{
+	const auto& cp = chunkPosition;
+	return chunkExist(chunkPosition) &&
+		// Top
+		chunkExist({ cp.x, cp.y + 1, cp.z }) &&
+		// Bottom
+		chunkExist({ cp.x, cp.y - 1, cp.z }) &&
+		// Left
+		chunkExist({ cp.x - 1, cp.y, cp.z }) &&
+		// Right
+		chunkExist({ cp.x + 1, cp.y, cp.z }) &&
+		// Front
+		chunkExist({ cp.x, cp.y, cp.z - 1 }) &&
+		// Back
+		chunkExist({ cp.x, cp.y, cp.z + 1 });
+}
+
+int ChunkManager::getNumBlocks()
+{
+	int counter = 0;
+	for (auto& chunk : m_chunks) {
+		
+		for (size_t x = 0; x < CHUNK_SIZE; x++) {
+			for (size_t y = 0; y < CHUNK_SIZE; y++) {
+				for (size_t z = 0; z < CHUNK_SIZE; z++) {
+
+					if (chunk.second->m_blocks[x][y][z].isActive()) {
+						counter++;
+					}
+
+				}
+			}
+		}
+
+	}
+
+	return counter;
 }
 
 void ChunkManager::updateBlockRemovalList()
@@ -293,14 +299,7 @@ void ChunkManager::updateChunkRemovalList()
 {
 	for (auto& removalChunk : m_chunkRemovalList) {
 
-		if (chunkExist(removalChunk)) {
-
-			//std::cout << "Chunk exist and is being deleted: X: " + chunkPosition.x << " Y: " << chunkPosition.y << " Z: " << chunkPosition.z << std::endl;
-			deleteChunk(removalChunk);
-		}
-		else {
-			//std::cout << "ERROR: TRYING TO DELETE A CHUNK THAT DOES NOT EXIST" << std::endl;
-		}
+		deleteChunk(removalChunk);
 	}
 
 
